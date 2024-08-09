@@ -1,18 +1,56 @@
 import streamlit as st
 import pandas as pd
-from data_fetch import fetch_data
+from data_fetch import fetch_data, search_symbols
 from theme import dark_theme
 from plotting import plot_data
-
-# Load environment variables
-# ... (Load environment variables code here)
 
 # Custom theme settings for Streamlit
 dark_theme()
 
 # Streamlit App
+st.set_page_config(page_title="Infomark Financial Dashboard :bar_chart:", layout="wide")
+
+# Add custom CSS for dark theme
+st.markdown("""
+<style>
+    .reportview-container {
+        background: #2E2E2E;
+        color: white;
+    }
+    .sidebar .sidebar-content {
+        background: #1E1E1E;
+        color: white;
+    }
+    .stTextInput>div>div>input {
+        background-color: #3C3C3C;
+        color: white;
+        border: 1px solid #666;
+    }
+    .stTextInput>div>div>input:focus {
+        border: 1px solid #1E90FF;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Main layout
 st.title('Infomark Financial Dashboard :bar_chart:')
 st.write('Explore data from Infomark across equities, crypto, commodities, economic indicators, and Forex.')
+
+# Centered Search Bar for Company Ticker Symbol
+st.markdown('<div style="display: flex; justify-content: center; margin-top: 20px;">', unsafe_allow_html=True)
+search_query = st.text_input('Search for Ticker Symbol', '', key='search_bar')
+st.markdown('</div>', unsafe_allow_html=True)
+
+if search_query is not None:
+    try:
+        search_results = search_symbols(search_query)
+        if not search_results.empty:
+            st.write('Search Results:')
+            st.dataframe(search_results[['symbol', 'name']])
+        else:
+            st.warning('No results found for the given search query.')
+    except Exception as e:
+        st.error(f'An error occurred while searching for the company: {e}')
 
 # Sidebar for user input
 with st.sidebar:
@@ -41,22 +79,22 @@ with st.sidebar:
     if start_date is not None and end_date is not None and start_date > end_date:
         st.error('Start date must be before end date.')
 
-# Main content area
-if st.button('Fetch Data 📊'):
-    if start_date is None or end_date is None:
-        st.warning('Please enter valid start and end dates.')
-    else:
-        with st.spinner('Fetching data...'):
-            data = fetch_data(data_type, symbol=symbol, indicator=indicator, currency_pair=currency_pair, start_date=start_date, end_date=end_date, provider=provider)
-
-        if not data.empty:
-            st.subheader(f'{data_type} Data 📈')
-
-            # Display data table
-            if plot_type == 'Simple Table':
-                st.dataframe(data)
-
-            # Plotting based on user selection
-            plot_data(data, plot_type, data_type)
+    # Fetch Data Button
+    if st.button('Fetch Data 📊'):
+        if start_date is None or end_date is None:
+            st.warning('Please enter valid start and end dates.')
         else:
-            st.warning('No data available for the selected criteria.')
+            with st.spinner('Fetching data...'):
+                data = fetch_data(data_type, symbol=symbol, indicator=indicator, currency_pair=currency_pair, start_date=start_date, end_date=end_date, provider=provider)
+
+            if not data.empty:
+                st.subheader(f'{data_type} Data 📈')
+
+                # Display data table
+                if plot_type == 'Simple Table':
+                    st.dataframe(data)
+
+                # Plotting based on user selection
+                plot_data(data, plot_type, data_type)
+            else:
+                st.warning('No data available for the selected criteria.')
