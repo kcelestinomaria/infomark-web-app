@@ -1,0 +1,41 @@
+# plotting.py
+import plotly.graph_objs as go
+import pandas as pd
+import streamlit as st
+
+def plot_data(data, plot_type, data_type):
+    # Ensure 'Date' column is in datetime format
+    if 'Date' in data.columns:
+        data['Date'] = pd.to_datetime(data['Date'], errors='coerce')
+    else:
+        st.warning('Data missing "Date" column.')
+        return
+
+    # Ensure 'Close' column is numeric
+    if 'Close' in data.columns:
+        data['Close'] = pd.to_numeric(data['Close'], errors='coerce')
+    else:
+        st.warning('Data missing "Close" column.')
+        return
+
+    # Plotting based on user selection
+    if plot_type == 'Line Graph':
+        if 'Date' in data.columns and 'Close' in data.columns and not data[['Date', 'Close']].isnull().values.any():
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Close', line=dict(color='#0f0')))
+            fig.update_layout(
+                title=f'{data_type} Line Graph',
+                xaxis_title='Date',
+                yaxis_title='Close',
+                plot_bgcolor='#000',
+                paper_bgcolor='#000',
+                font_color='#0f0'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning('Data missing required columns or data types for Line Graph.')
+
+    elif plot_type == 'Simple Table':
+        st.dataframe(data)
+    else:
+        st.warning('Invalid plot type or missing data for selected plot type.')

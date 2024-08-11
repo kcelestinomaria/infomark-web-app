@@ -1,33 +1,15 @@
 import streamlit as st
 import pandas as pd
-import authentication as auth
 from data_fetch import fetch_data, search_symbols
 from plotting import plot_data
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+import authenticatedb as auth
 
-# Set page config as the very first command
-st.set_page_config(page_title="Infomark Financial Dashboard :bar_chart:", layout="wide")
-
-# Apply custom CSS for dark theme
-st.markdown("""
-<style>
-    .reportview-container {
-        background: #2E2E2E;
-        color: white;
-    }
-    .sidebar .sidebar-content {
-        background: #1E1E1E;
-        color: white;
-    }
-    .stTextInput>div>div>input {
-        background-color: #3C3C3C;
-        color: white;
-        border: 1px solid #666;
-    }
-    .stTextInput>div>div>input:focus {
-        border: 1px solid #1E90FF;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Set up database connection
+DATABASE_URL = "sqlite:///./test.db"  # Change this URL if needed
+engine = create_engine(DATABASE_URL, echo=True)
+SessionLocal = sessionmaker(bind=engine)
 
 # Initialize session state keys
 if 'authentication_status' not in st.session_state:
@@ -41,18 +23,25 @@ if 'email' not in st.session_state:
 if 'logout' not in st.session_state:
     st.session_state['logout'] = False
 
-# Authentication
+# Function to get a database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Handle authentication
 if st.session_state['authentication_status']:
     # Logged in
     st.sidebar.header('Dashboard Navigation')
     if st.sidebar.button('Logout'):
         st.session_state['logout'] = True
-        auth.authenticator.logout()
+        auth.logout()  # This clears the session and updates the database
         st.session_state['authentication_status'] = False
         st.session_state['username'] = ''
         st.session_state['name'] = ''
         st.session_state['email'] = ''
-        # Attempting a workaround for rerun
         st.write("<meta http-equiv='refresh' content='0'>", unsafe_allow_html=True)
 
     username = st.session_state['username']
@@ -65,7 +54,8 @@ if st.session_state['authentication_status']:
         new_name = st.text_input('New Name', value=st.session_state['name'])
         new_email = st.text_input('New Email', value=st.session_state['email'])
         if st.form_submit_button('Update Profile'):
-            if auth.update_user_details(username, new_name, new_email):
+            db = next(get_db())
+            if auth.update_user_details(db, username, new_name, new_email):
                 st.session_state['name'] = new_name
                 st.session_state['email'] = new_email
                 st.success('Profile updated successfully!')
@@ -151,7 +141,7 @@ else:
     password = login_form.text_input('Password', type='password')
     
     if login_form.form_submit_button('Login'):
-        if auth.login(location='main'):
+        if auth.login(username, password):  # Call login with correct number of arguments
             st.session_state['authentication_status'] = True
             st.session_state['username'] = username
             st.session_state['name'] = username  # Adjust this if necessary
@@ -167,25 +157,9 @@ else:
     reg_password = reg_form.text_input('Password', type='password')
     
     if reg_form.form_submit_button('Register'):
-        if auth.register_user(reg_username, reg_email, reg_password):
-            st.success('Registered successfully! Please log in.')
+        db = next(auth.get_db())
+        if not auth.get_user(db, reg_username):
+            auth.create_user(db, reg_username, reg_email, reg_password)
+            st.success('Registration successful! Please log in.')
         else:
-            st.error('Username already exists.')
-
-    # Password Reset
-    st.write('Forgot Password? Reset here:')
-    reset_form = st.form('reset_form')
-    reset_username = reset_form.text_input('Username')
-    new_password = reset_form.text_input('New Password', type='password')
-    
-    if reset_form.form_submit_button('Reset Password'):
-        if auth.reset_password(reset_username, new_password):
-            st.success('Password reset successfully!')
-        else:
-            st.error('Username not found.')
-
-    # Forgot Username
-    st.write('Forgot Username? Contact Support.')
-
-    # Forgot Email Verification
-    st.write('If you forgot your email, please contact support with your username for verification.')
+            st.error('Username already exists')

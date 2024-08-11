@@ -1,72 +1,61 @@
-import altair as alt
 import pandas as pd
 import streamlit as st
-from theme import dark_theme
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def plot_data(data, plot_type, data_type):
-    if plot_type == 'Line Chart':
-        if 'Date' in data.columns and 'Close' in data.columns and data['Close'].dtype in [float, int]:
-            chart = alt.Chart(data).mark_line().encode(
-                x='Date:T',
-                y='Close:Q',
-                color=alt.value('#0f0')
-            ).properties(
-                title=f'{data_type} Line Chart'
-            ).configure(
-                **dark_theme()['config']
-            )
-            st.altair_chart(chart, use_container_width=True)
+    # Display the first few rows of the data
+    st.write("Data preview:")
+    st.write(data.head())
+
+    # Display the column names and data types
+    st.write("Column names:", data.columns.tolist())
+    st.write("Data types:", data.dtypes.to_dict())
+
+    # Ensure 'Date' column is in datetime format
+    if 'Date' in data.columns:
+        data['Date'] = pd.to_datetime(data['Date'], errors='coerce')
+        st.write(f"'Date' column converted to datetime. Data type: {data['Date'].dtype}")
+    else:
+        st.warning('Data missing "Date" column.')
+        if plot_type != 'Correlation Matrix':
+            st.warning('Switching to Correlation Matrix plot due to missing "Date" column.')
+            plot_type = 'Correlation Matrix'
+
+    # Ensure 'Close' column is numeric
+    if 'Close' in data.columns:
+        data['Close'] = pd.to_numeric(data['Close'], errors='coerce')
+        st.write(f"'Close' column converted to numeric. Data type: {data['Close'].dtype}")
+    else:
+        st.warning('Data missing "Close" column.')
+        if plot_type != 'Correlation Matrix':
+            st.warning('Switching to Correlation Matrix plot due to missing "Close" column.')
+            plot_type = 'Correlation Matrix'
+
+    # Check for missing values in critical columns
+    missing_values = data[['Date', 'Close']].isnull().sum()
+    st.write("Missing values in critical columns:", missing_values)
+
+    # Plotting based on user selection
+    if plot_type == 'Line Graph':
+        if 'Date' in data.columns and 'Close' in data.columns and not data[['Date', 'Close']].isnull().values.any():
+            st.line_chart(data.set_index('Date')['Close'], use_container_width=True)
         else:
-            st.warning('Data missing required columns or data types for Line Chart.')
-
-    elif plot_type == 'Candlestick Chart' and all(col in data.columns for col in ['Date', 'Open', 'High', 'Low', 'Close']):
-        base = alt.Chart(data).encode(
-            x='Date:T'
-        )
-        
-        # Create the open-high and low-close bars
-        rules = base.mark_rule().encode(
-            y='Open:Q',
-            y2='Close:Q',
-            color=alt.condition(
-                alt.datum.Open < alt.datum.Close,
-                alt.value('green'),
-                alt.value('red')
-            )
-        )
-        
-        # Create the high-low bars
-        bars = base.mark_bar().encode(
-            y='High:Q',
-            y2='Low:Q',
-            color=alt.condition(
-                alt.datum.Open < alt.datum.Close,
-                alt.value('green'),
-                alt.value('red')
-            )
-        )
-        
-        chart = rules + bars
-        chart = chart.properties(
-            title=f'{data_type} Candlestick Chart'
-        ).configure(
-            **dark_theme()['config']
-        )
-        st.altair_chart(chart, use_container_width=True)
-
-    elif plot_type == 'Bar Chart' and 'Volume' in data.columns and data['Volume'].dtype in [float, int]:
-        chart = alt.Chart(data).mark_bar().encode(
-            x='Date:T',
-            y='Volume:Q',
-            color=alt.value('#0f0')
-        ).properties(
-            title=f'{data_type} Trading Volume'
-        ).configure(
-            **dark_theme()['config']
-        )
-        st.altair_chart(chart, use_container_width=True)
+            st.warning('Data does not contain required columns or has missing values for the selected plot type.')
+            plot_type = 'Correlation Matrix'
 
     elif plot_type == 'Simple Table':
         st.dataframe(data)
+
+    elif plot_type == 'Correlation Matrix':
+        numeric_cols = data.select_dtypes(include='number')
+        if not numeric_cols.empty:
+            corr = numeric_cols.corr()
+            fig, ax = plt.subplots()
+            sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
+            st.pyplot(fig)
+        else:
+            st.warning('No numeric columns available to generate a correlation matrix.')
+
     else:
         st.warning('Invalid plot type or missing data for selected plot type.')
