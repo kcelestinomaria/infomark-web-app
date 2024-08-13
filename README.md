@@ -27,7 +27,7 @@ It has been developed for the Strathmore University DBIT IS Project 1, under stu
 ### Backend
 
 - **Database**: Uses SQLite3 and YAML files for efficient data storage.
-- **Authentication**: Passwords are hashed using `passlib` with bcrypt for security.
+- **Authentication**: Passwords are hashed and managed using streamlit-authenticator for security.
 - **User Management**: Functions for creating, updating, and retrieving user information.
 
 ### Frontend
