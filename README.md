@@ -109,9 +109,6 @@ This command launches the Streamlit server and opens the web app in your default
 - **AI-Powered Insights**: Integrate AI to provide predictive analytics and personalized financial recommendations.
 - **Enhanced Data Visualization**: Add advanced charting tools and interactive visualizations.
 - **User Feedback System**: Implement a feedback mechanism to continuously improve the app based on user input.
-
-## Creative Additions
-
 - **Interactive Tutorials**: Add guided tutorials to help users understand financial concepts and use the app effectively.
 - **Customizable Dashboards**: Allow users to personalize their dashboards with widgets and data sources of their choice.
 - **Real-Time Notifications**: Implement real-time notifications for important market events and updates.
