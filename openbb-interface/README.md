@@ -1,6 +1,3 @@
-Here's the updated `README.md` with the username `kcelestinomaria`:
-
----
 
 # Infomark Terminal Backend
 
@@ -50,19 +47,18 @@ To get started with the Infomark Terminal backend, follow these steps:
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/kcelestinomaria/infomark-backend.git
-   cd infomark-backend
+   git clone https://github.com/kcelestinomaria/infomark-web-app.git
+   cd openbb-interface
    ```
 
 2. **Install Dependencies**
    Make sure you have Python 3.8+ installed, then run:
-   ```bash
-   pip install -r requirements.txt
-   ```
+ 
 
 3. **Configure API Keys**
    Create a `.env` file in the root directory and add your API keys for the following services:
    ```env
+   PAT=your_openbb_access_token
    BENZINGA_API_KEY=your_benzinga_api_key
    INTRINIO_API_KEY=your_intrinio_api_key
    YAHOO_FINANCE_API_KEY=your_yahoo_finance_api_key
@@ -73,7 +69,7 @@ To get started with the Infomark Terminal backend, follow these steps:
 4. **Run the Backend**
    Start the backend server:
    ```bash
-   python app.py
+   /infomark_cli> cli
    ```
 
 ## Usage
@@ -82,11 +78,10 @@ Once the backend is running, you can connect it to the Infomark frontend. The ba
 
 **Endpoints:**
 
-- **/api/stocks**: Fetch stock market data.
-- **/api/options**: Retrieve options data.
-- **/api/crypto**: Get cryptocurrency data.
-- **/api/forex**: Access forex market information.
-- **/api/economy**: Economic indicators and macro data.
+- **/equity**: Fetch stock market data.
+- **/crypto**: Get cryptocurrency data.
+- **/currency**: Access forex market information.
+- **/economy**: Economic indicators and macro data.
 
 For detailed API documentation, please refer to [API Documentation](https://example.com/api-docs).
 
@@ -110,12 +105,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For any questions or support, feel free to reach out:
 
-- **Email**: support@infomark.co
+- **Email**: celestine.kariuki@strathmore.edu
 - **Discord**: [Join our Discord](https://example.com/discord)
 - **Twitter**: [Follow us](https://twitter.com/infomark)
-
-Thank you for using Infomark Terminal!
-
 ---
-
-Feel free to adjust any additional details as necessary!
