@@ -26,7 +26,7 @@ It has been developed for the Strathmore University DBIT IS Project 1, under stu
 
 ### Backend
 
-- **Database**: Uses SQLite3 and YAML files for efficient data storage.
+- **Database**: Uses SQLite3 to cache data in a local filesystem and YAML files for efficient data storage over the browser.
 - **Authentication**: Passwords are hashed and managed using streamlit-authenticator for security.
 - **User Management**: Functions for creating, updating, and retrieving user information.
 
@@ -45,6 +45,20 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 - **Financial Modeling Prep (FMP)**: Supplies comprehensive financial data and metrics.
 - **Intrinio**: Delivers financial data feeds and analytics.
 - **Federal Reserve Bank of New York API**: Provides macroeconomic data from the Federal Reserve.
+- **Yahoo Finance**: Historical and real-time market data.
+- - **BizToc**: Financial news aggregation.
+- **CBOE**: Options market data.
+- **ECB**: European Central Bank data.
+- **EconDB**: Economic data.
+- **FINRA**: Financial regulatory data.
+- **FinViz**: Stock market data.
+- **FMP**: Financial modeling prep data.
+- **FRED**: Federal Reserve Economic Data.
+- **World Bank**: Global economic data.
+- **GDELT**: Global event data.
+- **IEEE**: Financial research data.
+- **Inflation API**: Inflation data.
+- **NASDAQ**: Stock market data.
 
 ### Data Storage and Management
 
