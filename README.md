@@ -46,7 +46,7 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 - **Intrinio**: Delivers financial data feeds and analytics.
 - **Federal Reserve Bank of New York API**: Provides macroeconomic data from the Federal Reserve.
 - **Yahoo Finance**: Historical and real-time market data.
-- - **BizToc**: Financial news aggregation.
+- **BizToc**: Financial news aggregation.
 - **CBOE**: Options market data.
 - **ECB**: European Central Bank data.
 - **EconDB**: Economic data.
@@ -62,9 +62,9 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 
 ### Data Storage and Management
 
-- **Database**: Uses SQLite3 for data storage, ensuring lightweight and reliable database management.
+- **Database**: Uses SQLite3 for caching of data retrieved from APIs in the terminal, ensuring lightweight and reliable database management.
 - **YAML Files**: Configuration and user preferences are managed using YAML files instead of cookies for improved security and organization.
-- **OpenBB Cloud Hub**: Hosts API connections and ensures robust data integration and management. It's like a gateway for APIs, ensuring easy management
+- **OpenBB Cloud Hub**: Hosts API connections, endpoints and ensures robust data integration and management. It's like a gateway for APIs, ensuring easy management and input of credentials by the Admin.
 
 ## Setup and Installation
 
