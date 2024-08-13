@@ -123,5 +123,3 @@ For support or inquiries, please contact:
 - **Email**: celestine.kariuki@strathmore.edu
 
 ---
-
-This documentation provides a comprehensive overview of the Infomark Web App, including its features, technical details, setup instructions, and future enhancements. If you have any further requirements or changes, feel free to ask!
