@@ -100,7 +100,7 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 4. **Run the Application**
 
    ```bash
-   streamlit run app.py
+   streamlit run main.py
    ```
 
 ## Running the Application
