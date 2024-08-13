@@ -108,7 +108,7 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 To start the Infomark Web App, execute the following command in your terminal:
 
 ```bash
-streamlit run app.py
+streamlit run main.py
 ```
 
 This command launches the Streamlit server and opens the web app in your default browser.
