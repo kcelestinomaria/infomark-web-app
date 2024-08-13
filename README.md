@@ -1,4 +1,3 @@
-Here’s the updated documentation for the **Infomark Web App** with detailed sections on running the app, API integrations, and additional creative additions.
 
 ---
 
@@ -6,7 +5,9 @@ Here’s the updated documentation for the **Infomark Web App** with detailed se
 
 ## Overview
 
-The **Infomark Web App** is a sophisticated financial platform designed for educational purposes and data analysis. It provides a seamless experience for users to explore financial data, manage profiles, and visualize trends across various financial sectors.
+The **Infomark Web App** is a sophisticated financial platform designed for educational purposes and data analysis. It provides a seamless experience for users to explore financial data, query useful financial information, and visualize trends across various financial sectors for their statistical, business and/or financial needs.
+
+It has been developed for the Strathmore University DBIT IS Project 1, under student name: Celestine Kariuki , of student number: 116533
 
 ## Features
 
@@ -19,13 +20,13 @@ The **Infomark Web App** is a sophisticated financial platform designed for educ
 
 - **Search & Explore**: Search for ticker symbols and explore various types of financial data.
 - **Data Visualization**: Display data through line graphs and tables.
-- **Provider Selection**: Access data from multiple financial data providers.
+- **Provider Selection**: Access data from multiple financial data providers through an Openbb interface integration
 
 ## Technical Specifications
 
 ### Backend
 
-- **Database**: Uses SQLite3 for efficient data storage.
+- **Database**: Uses SQLite3 and YAML files for efficient data storage.
 - **Authentication**: Passwords are hashed using `passlib` with bcrypt for security.
 - **User Management**: Functions for creating, updating, and retrieving user information.
 
@@ -49,7 +50,7 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 
 - **Database**: Uses SQLite3 for data storage, ensuring lightweight and reliable database management.
 - **YAML Files**: Configuration and user preferences are managed using YAML files instead of cookies for improved security and organization.
-- **OpenBB Cloud Hub**: Hosts API connections and ensures robust data integration and management.
+- **OpenBB Cloud Hub**: Hosts API connections and ensures robust data integration and management. It's like a gateway for APIs, ensuring easy management
 
 ## Setup and Installation
 
@@ -58,9 +59,10 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 - Python 3.7 or higher
 - Streamlit
 - SQLAlchemy
-- passlib
-- PyYAML (for YAML file management)
+- SQLite3
+- Streamlit-authenticator
 - Additional libraries for API integrations
+- Pip for Python Management
 
 ### Installation
 
@@ -79,7 +81,7 @@ The Infomark Web App integrates with several APIs to fetch and display financial
 
 3. **Configure API Keys**
 
-   Set up your API keys in a YAML configuration file (`config.yaml`) for secure access.
+   Set up your API keys and/or Personal Access Tokens(PAT) in a YAML configuration file (`config.py`) for secure access.
 
 4. **Run the Application**
 
@@ -118,8 +120,7 @@ This command launches the Streamlit server and opens the web app in your default
 
 For support or inquiries, please contact:
 
-- **Email**: support@infomark.com
-- **Website**: [Infomark Website](https://www.infomark.com)
+- **Email**: celestine.kariuki@strathmore.edu
 
 ---
 
