@@ -1,4 +1,3 @@
-# data_fetch.py
 import pandas as pd
 from openbb import obb
 import streamlit as st
@@ -6,67 +5,33 @@ import streamlit as st
 def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_date=None, end_date=None, provider=""):
     try:
         if provider == "Standard":
-            if data_type == 'Equity': # Stocks
-                if start_date and end_date:
-                    data_daily = obb.equity.price.historical(symbol=symbol, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data_daily = obb.equity.price.historical(symbol=symbol).to_df()
-                data = data_daily
+            if data_type == 'Equity':  # Stocks
+                data = obb.equity.price.historical(symbol=symbol, start_date=start_date, end_date=end_date).to_df()
             elif data_type == 'Crypto':
-                if start_date and end_date:
-                    data = obb.crypto.price.historical(symbol=symbol, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data = obb.crypto.price.historical(symbol=symbol).to_df()
+                data = obb.crypto.price.historical(symbol=symbol, start_date=start_date, end_date=end_date).to_df()
             elif data_type == 'Commodity':
-                if start_date and end_date:
-                    data = obb.commodity.price.historical(symbol=symbol, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data = obb.commodity.price.historical(symbol=symbol).to_df()
+                data = obb.commodity.price.historical(symbol=symbol, start_date=start_date, end_date=end_date).to_df()
             elif data_type == 'US Economy Data':
                 data = obb.economy.fred_search(["WALCL", "WLRRAL", "WDTGAL", "SP500"]).to_df()
-            elif data_type == 'currency':
-                if start_date and end_date:
-                    data = obb.currency.price.historical(currency_pair=currency_pair, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data = obb.currency.price.historical(currency_pair=currency_pair).to_df()
+            elif data_type == 'Currency':
+                data = obb.fx.price.historical(symbol=symbol, start_date=start_date, end_date=end_date).to_df()
             else:
-                return pd.DataFrame()
+                data = pd.DataFrame()
+        elif provider == "Custom":
+            # Implement custom provider data fetching
+            data = pd.DataFrame()  # Placeholder
         else:
-            # Handle provider-specific logic
-            if data_type == 'Equity':
-                if start_date and end_date:
-                    data = obb.equity.price.historical(symbol=symbol, provider=provider, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data = obb.equity.price.historical(symbol=symbol, provider=provider).to_df()
-            elif data_type == 'Crypto':
-                if start_date and end_date:
-                    data = obb.crypto.price.historical(symbol=symbol, provider=provider, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data = obb.crypto.price.historical(symbol=symbol, provider=provider).to_df()
-            elif data_type == 'Commodity':
-                if start_date and end_date:
-                    data = obb.commodity.price.historical(symbol=symbol, provider=provider, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data = obb.commodity.price.historical(symbol=symbol, provider=provider).to_df()
-            elif data_type == 'US Economy Data':
-                data = obb.economy.fred_search(["WALCL", "WLRRAL", "WDTGAL", "SP500"], provider=provider).to_df()
-            elif data_type == 'currency':
-                if start_date and end_date:
-                    data = obb.currency.price.historical(currency_pair=currency_pair, provider=provider, start_date=start_date, end_date=end_date).to_df()
-                else:
-                    data = obb.currency.price.historical(currency_pair=currency_pair, provider=provider).to_df()
-            else:
-                return pd.DataFrame()
+            data = pd.DataFrame()
+        
+        return data
     except Exception as e:
-        st.error(f'Error fetching data: {e}')
+        st.error(f"An error occurred while fetching data: {e}")
         return pd.DataFrame()
-    return data
 
-def search_symbols(query):
+def search_symbols(search_term):
     try:
-        # Example for equity symbols, you might need to adjust this based on the provider
-        search_results = obb.equity.search(query=query).to_df()
-        return search_results[['symbol', 'name']]
+        results = obb.search(search_term)
+        return results
     except Exception as e:
-        st.error(f'Error searching for symbols: {e}')
+        st.error(f"An error occurred while searching for symbols: {e}")
         return pd.DataFrame()
