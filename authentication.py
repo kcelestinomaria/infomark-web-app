@@ -1,82 +1,45 @@
-import yaml
-import streamlit as st
-import streamlit_authenticator as stauth
+import sqlite3
+import bcrypt
 
-# Load configuration from config.yml
-with open('config.yml') as file:
-    config = yaml.load(file, Loader=yaml.SafeLoader)
+DB_PATH = 'app_database.db'
 
-# Initialize authenticator with configuration from config.yml
-authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days'],
-    config['pre-authorized']
-)
-
-def login(location='main'):
-    """
-    Handle user login using the authenticator instance.
-    """
-    return authenticator.login(location=location)
-
-def update_user_details(username, new_name, new_email):
-    """
-    Update user details (name and email) in the config.yml file.
-    """
-    try:
-        if username in authenticator.credentials['usernames']:
-            authenticator.credentials['usernames'][username]['name'] = new_name
-            authenticator.credentials['usernames'][username]['email'] = new_email
-            # Save updated credentials to config.yml
-            with open('config.yml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
-            return True
-        else:
-            return False
-    except Exception as e:
-        st.error(f"An error occurred while updating user details: {e}")
-        return False
+def create_table():
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                username TEXT PRIMARY KEY,
+                email TEXT NOT NULL,
+                password TEXT NOT NULL
+            )
+        ''')
+        conn.commit()
 
 def register_user(username, email, password):
-    """
-    Register a new user by adding them to the config.yml file.
-    """
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     try:
-        if username in authenticator.credentials['usernames']:
-            return False  # Username already exists
-        else:
-            # Hash the password before storing
-            hashed_password = authenticator.hasher.hash_password(password)
-            authenticator.credentials['usernames'][username] = {
-                'name': username,
-                'email': email,
-                'password': hashed_password
-            }
-            # Save updated credentials to config.yml
-            with open('config.yml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
-            return True
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', 
+                           (username, email, hashed_password))
+            conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
     except Exception as e:
-        st.error(f"An error occurred while registering the user: {e}")
+        print(f"An error occurred while registering the user: {e}")
         return False
 
-def reset_password(username, new_password):
-    """
-    Reset the password for a user and update the config.yml file.
-    """
+def authenticate_user(username, password):
     try:
-        if username in authenticator.credentials['usernames']:
-            # Hash the new password before storing
-            hashed_password = authenticator.hasher.hash_password(new_password)
-            authenticator.credentials['usernames'][username]['password'] = hashed_password
-            # Save updated credentials to config.yml
-            with open('config.yml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
-            return True
-        else:
-            return False
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT password FROM users WHERE username = ?', (username,))
+            row = cursor.fetchone()
+            if row and bcrypt.checkpw(password.encode('utf-8'), row[0].encode('utf-8')):
+                return True
+            else:
+                return False
     except Exception as e:
-        st.error(f"An error occurred while resetting the password: {e}")
+        print(f"An error occurred during authentication: {e}")
         return False

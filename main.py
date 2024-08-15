@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-import authentication as auth
 from data_fetch import fetch_data, search_symbols
 from plotting import plot_data
+from authentication import register_user, authenticate_user
 
 # Set page config as the very first command
 st.set_page_config(page_title="Infomark Financial Dashboard :bar_chart:", layout="wide")
@@ -41,13 +41,22 @@ if 'email' not in st.session_state:
 if 'logout' not in st.session_state:
     st.session_state['logout'] = False
 
-# Authentication
+def handle_login():
+    if st.session_state['authentication_status']:
+        return True
+    username = st.session_state['username']
+    password = st.session_state['password']
+    if authenticate_user(username, password):
+        st.session_state['authentication_status'] = True
+        st.session_state['name'] = username  # Set the name for welcome message
+        return True
+    return False
+
 if st.session_state['authentication_status']:
     # Logged in
     st.sidebar.header('Dashboard Navigation')
     if st.sidebar.button('Logout'):
         st.session_state['logout'] = True
-        auth.authenticator.logout()
         st.session_state['authentication_status'] = False
         st.session_state['username'] = ''
         st.session_state['name'] = ''
@@ -55,22 +64,7 @@ if st.session_state['authentication_status']:
         # Attempting a workaround for rerun
         st.write("<meta http-equiv='refresh' content='0'>", unsafe_allow_html=True)
 
-    username = st.session_state['username']
     st.write(f'Welcome *{st.session_state["name"]}*')
-
-    # Profile Management
-    st.sidebar.header('Profile Management 🛠️')
-    with st.sidebar.form('profile_form'):
-        st.write('Update your profile details:')
-        new_name = st.text_input('New Name', value=st.session_state['name'])
-        new_email = st.text_input('New Email', value=st.session_state['email'])
-        if st.form_submit_button('Update Profile'):
-            if auth.update_user_details(username, new_name, new_email):
-                st.session_state['name'] = new_name
-                st.session_state['email'] = new_email
-                st.success('Profile updated successfully!')
-            else:
-                st.error('Failed to update profile.')
 
     # Display content
     st.title('Infomark Financial Dashboard :bar_chart:')
@@ -146,43 +140,42 @@ else:
     # Login / Register
     st.title('Login / Register')
 
-    login_form = st.form('login_form')
-    username = login_form.text_input('Username')
-    password = login_form.text_input('Password', type='password')
-    
-    if login_form.form_submit_button('Login'):
-        if auth.login(location='main'):
-            st.session_state['authentication_status'] = True
+    with st.form('login_form'):
+        username = st.text_input('Username')
+        password = st.text_input('Password', type='password')
+        
+        if st.form_submit_button('Login'):
             st.session_state['username'] = username
-            st.session_state['name'] = username  # Adjust this if necessary
-            st.experimental_rerun()  # Reload the app to show the dashboard
-        else:
-            st.error('Username/password is incorrect')
+            st.session_state['password'] = password
+            if handle_login():
+                st.experimental_rerun()  # Reload the app to show the dashboard
+            else:
+                st.error('Username/password is incorrect')
 
     # Registration
     st.write('No account? Register here:')
-    reg_form = st.form('register_form')
-    reg_username = reg_form.text_input('Username')
-    reg_email = reg_form.text_input('Email')
-    reg_password = reg_form.text_input('Password', type='password')
-    
-    if reg_form.form_submit_button('Register'):
-        if auth.register_user(reg_username, reg_email, reg_password):
-            st.success('Registered successfully! Please log in.')
-        else:
-            st.error('Username already exists.')
+    with st.form('register_form'):
+        reg_username = st.text_input('Username')
+        reg_email = st.text_input('Email')
+        reg_password = st.text_input('Password', type='password')
+        
+        if st.form_submit_button('Register'):
+            if register_user(reg_username, reg_email, reg_password):
+                st.success('Registered successfully! Please log in.')
+            else:
+                st.error('Username already exists.')
 
     # Password Reset
     st.write('Forgot Password? Reset here:')
-    reset_form = st.form('reset_form')
-    reset_username = reset_form.text_input('Username')
-    new_password = reset_form.text_input('New Password', type='password')
-    
-    if reset_form.form_submit_button('Reset Password'):
-        if auth.reset_password(reset_username, new_password):
-            st.success('Password reset successfully!')
-        else:
-            st.error('Username not found.')
+    with st.form('reset_form'):
+        reset_username = st.text_input('Username')
+        new_password = st.text_input('New Password', type='password')
+        
+        if st.form_submit_button('Reset Password'):
+            if register_user(reset_username, None, new_password):  # Assuming the reset function works like registration
+                st.success('Password reset successfully!')
+            else:
+                st.error('Username not found.')
 
     # Forgot Username
     st.write('Forgot Username? Contact Support.')
