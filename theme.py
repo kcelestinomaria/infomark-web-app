@@ -1,4 +1,3 @@
-# theme.py
 def dark_theme():
     return {
         "config": {

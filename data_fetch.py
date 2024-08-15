@@ -1,7 +1,37 @@
 import pandas as pd
-from openbb import obb
-import streamlit as st
+from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 
+# MongoDB Atlas connection string
+uri = "mongodb+srv://celestino127:<C0mpa$$i0n127>@cluster0.5qsdpkx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(uri, server_api=ServerApi('1'))
+
+# Connect to MongoDB database
+db = client['infomark_db']
+data_collection = db['data']
+
+def fetch_data(data_type, symbol=None, indicator=None, currency_pair=None, start_date=None, end_date=None, provider='Standard'):
+    """Fetches data based on type and filters from MongoDB"""
+    query = {"data_type": data_type}
+    if symbol:
+        query["symbol"] = symbol
+    if indicator:
+        query["indicator"] = indicator
+    if currency_pair:
+        query["currency_pair"] = currency_pair
+    if start_date and end_date:
+        query["date"] = {"$gte": start_date, "$lte": end_date}
+    if provider != 'Standard':
+        query["provider"] = provider
+
+    cursor = data_collection.find(query)
+    data = pd.DataFrame(list(cursor))
+
+    # Clean up the DataFrame, if necessary
+    if not data.empty:
+        data.drop('_id', axis=1, inplace=True)
+
+<<<<<<< HEAD
 def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_date=None, end_date=None, provider=""):
     try:
         if provider == "Standard":
@@ -35,3 +65,6 @@ def search_symbols(search_term):
     except Exception as e:
         st.error(f"An error occurred while searching for symbols: {e}")
         return pd.DataFrame()
+=======
+    return data
+>>>>>>> 9451902 (Default)

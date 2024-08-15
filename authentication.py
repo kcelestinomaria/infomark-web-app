@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import yaml
 import streamlit as st
 import streamlit_authenticator as stauth
@@ -130,3 +131,5 @@ def reset_password(username, new_password):
     except Exception as e:
         st.error(f"An error occurred while resetting the password: {e}")
         return False
+=======
+>>>>>>> 9451902 (Default)
