@@ -5,7 +5,7 @@
 
 ## Overview
 
-The **Infomark Web App** is a sophisticated financial platform designed for educational purposes and data analysis. It provides a seamless experience for users to explore financial data, query useful financial information, and visualize trends across various financial sectors for their statistical, business and/or financial needs.
+The **Infomark Web App** is a sophisticated financial platform designed for educational purposes and data analysis. It provides a seamless experience for users to explore financial data, query useful financial information, and visualize trends across various financial sectors for their statistical, business education, and/or financial education needs.
 
 It has been developed for the Strathmore University DBIT IS Project 1, under student name: Celestine Kariuki , of student number: 116533
 
