@@ -1,8 +1,10 @@
+import os
+import base64
 import streamlit as st
 import pandas as pd
 from data_fetch import fetch_data, search_symbols
 from plotting import plot_data
-from authentication import register_user, authenticate_user
+from authentication import register_user, authenticate_user, update_user_credentials
 
 # Set page config as the very first command
 st.set_page_config(page_title="Infomark Financial Dashboard :bar_chart:", layout="wide")
@@ -25,6 +27,21 @@ st.markdown("""
     }
     .stTextInput>div>div>input:focus {
         border: 1px solid #1E90FF;
+    }
+    .profile-picture-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+    .profile-picture-container img {
+        border-radius: 50%;
+        max-width: 150px;
+        max-height: 150px;
+    }
+    .profile-picture-container h3 {
+        margin-top: 10px;
+        color: white;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -52,6 +69,37 @@ def handle_login():
         return True
     return False
 
+def handle_update_credentials():
+    if st.session_state['authentication_status']:
+        username = st.session_state['username']
+        new_username = st.session_state.get('new_username', username)
+        new_password = st.session_state.get('new_password', None)
+        if update_user_credentials(username, new_username, new_password):
+            st.success('Credentials updated successfully!')
+            # Update session state
+            st.session_state['username'] = new_username
+            st.session_state['name'] = new_username
+        else:
+            st.error('Failed to update credentials.')
+
+def handle_upload_image(uploaded_file):
+    if uploaded_file is not None:
+        # Ensure the directory exists
+        save_dir = './images/'
+        os.makedirs(save_dir, exist_ok=True)
+        
+        # Save file
+        save_path = os.path.join(save_dir, f'{st.session_state["username"]}_profile_pic.png')
+        with open(save_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.success('Profile picture uploaded successfully!')
+        return save_path
+    return None
+
+def load_image(image_path):
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
 if st.session_state['authentication_status']:
     # Logged in
     st.sidebar.header('Dashboard Navigation')
@@ -66,9 +114,20 @@ if st.session_state['authentication_status']:
 
     st.write(f'Welcome *{st.session_state["name"]}*')
 
-    # Display content
-    st.title('Infomark Financial Dashboard :bar_chart:')
-    st.write('Explore data from Infomark across equities, crypto, commodities, economic indicators, and Forex.')
+    # Profile Picture Upload
+    st.sidebar.header('Upload Profile Picture')
+    uploaded_file = st.sidebar.file_uploader("Choose a profile picture", type=["png", "jpg", "jpeg"])
+    profile_pic_path = handle_upload_image(uploaded_file)
+
+    if profile_pic_path:
+        # Display the profile picture and user's name on the top right
+        image_base64 = load_image(profile_pic_path)
+        st.markdown(f'''
+        <div class="profile-picture-container">
+            <img src="data:image/png;base64,{image_base64}" />
+            <h3>{st.session_state["name"]}</h3>
+        </div>
+        ''', unsafe_allow_html=True)
 
     # Centered Search Bar for Company Ticker Symbol
     st.markdown('<div style="display: flex; justify-content: center; margin-top: 20px;">', unsafe_allow_html=True)
@@ -136,6 +195,16 @@ if st.session_state['authentication_status']:
             else:
                 st.warning('No data available for the selected criteria.')
 
+    # Update Credentials Form
+    st.sidebar.header('Update Credentials')
+    with st.sidebar.form('update_credentials_form'):
+        new_username = st.text_input('New Username', value=st.session_state['username'])
+        new_password = st.text_input('New Password', type='password')
+        if st.form_submit_button('Update Credentials'):
+            st.session_state['new_username'] = new_username
+            st.session_state['new_password'] = new_password
+            handle_update_credentials()
+
 else:
     # Login / Register
     st.title('Login / Register')
@@ -178,7 +247,7 @@ else:
                 st.error('Username not found.')
 
     # Forgot Username
-    st.write('Forgot Username? Contact Support.')
+    st.write('Forgot Username? [Contact Support](mailto:support@infomark.com?subject=Forgot%20Username)')
 
     # Forgot Email Verification
-    st.write('If you forgot your email, please contact support with your username for verification.')
+    st.write('If you forgot your email, please [contact support](mailto:support@infomark.com?subject=Forgot%20Email%20Verification) with your username for verification.')
