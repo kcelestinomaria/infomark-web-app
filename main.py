@@ -209,6 +209,13 @@ else:
     # Login / Register
     st.title('Login / Register')
 
+    # Display Infomark Logo
+    logo_path = 'static/infomark-logo.png'  # Path to your logo image
+    if os.path.isfile(logo_path):
+        with open(logo_path, "rb") as logo_file:
+            logo_base64 = base64.b64encode(logo_file.read()).decode()
+        st.markdown(f'<img src="data:image/png;base64,{logo_base64}" width="200"/>', unsafe_allow_html=True)
+
     with st.form('login_form'):
         username = st.text_input('Username')
         password = st.text_input('Password', type='password')
@@ -246,8 +253,6 @@ else:
             else:
                 st.error('Username not found.')
 
-    # Forgot Username
-    st.write('Forgot Username? [Contact Support](mailto:support@infomark.com?subject=Forgot%20Username)')
+    # Support Contact
+    st.write('Facing any issues or have any enlightening feedback? [Contact Support](mailto:support@infomark.com?subject=Forgot%20Username)')
 
-    # Forgot Email Verification
-    st.write('If you forgot your email, please [contact support](mailto:support@infomark.com?subject=Forgot%20Email%20Verification) with your username for verification.')
