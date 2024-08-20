@@ -5,6 +5,7 @@ import pandas as pd
 from data_fetch import fetch_data, search_symbols
 from plotting import plot_data
 from authentication import register_user, authenticate_user, update_user_credentials
+from chatbot import get_chatbot_response  # Import the chatbot function
 
 # Set page config as the very first command
 st.set_page_config(page_title="Infomark Financial Dashboard :bar_chart:", layout="wide")
@@ -206,53 +207,45 @@ if st.session_state['authentication_status']:
             handle_update_credentials()
 
 else:
-    # Login / Register
-    st.title('Login / Register')
-
-    # Display Infomark Logo
-    logo_path = 'static/infomark-logo.png'  # Path to your logo image
-    if os.path.isfile(logo_path):
-        with open(logo_path, "rb") as logo_file:
-            logo_base64 = base64.b64encode(logo_file.read()).decode()
-        st.markdown(f'<img src="data:image/png;base64,{logo_base64}" width="200"/>', unsafe_allow_html=True)
-
+    # Not logged in
+    st.title("Login to your Infomark Account")
     with st.form('login_form'):
         username = st.text_input('Username')
         password = st.text_input('Password', type='password')
-        
         if st.form_submit_button('Login'):
             st.session_state['username'] = username
             st.session_state['password'] = password
             if handle_login():
-                st.experimental_rerun()  # Reload the app to show the dashboard
+                st.success('Login successful! Redirecting...')
+                st.experimental_rerun()
             else:
-                st.error('Username/password is incorrect')
+                st.error('Invalid username or password.')
 
-    # Registration
-    st.write('No account? Register here:')
-    with st.form('register_form'):
-        reg_username = st.text_input('Username')
-        reg_email = st.text_input('Email')
-        reg_password = st.text_input('Password', type='password')
-        
-        if st.form_submit_button('Register'):
-            if register_user(reg_username, reg_email, reg_password):
-                st.success('Registered successfully! Please log in.')
-            else:
-                st.error('Username already exists.')
+# Add the chatbot UI at the bottom of the page
+st.markdown("<hr>", unsafe_allow_html=True)
+st.subheader("Chat with Nia 🤖")
 
-    # Password Reset
-    st.write('Forgot Password? Reset here:')
-    with st.form('reset_form'):
-        reset_username = st.text_input('Username')
-        new_password = st.text_input('New Password', type='password')
-        
-        if st.form_submit_button('Reset Password'):
-            if register_user(reset_username, None, new_password):  # Assuming the reset function works like registration
-                st.success('Password reset successfully!')
-            else:
-                st.error('Username not found.')
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
 
-    # Support Contact
-    st.write('Facing any issues or have any enlightening feedback? [Contact Support](mailto:support@infomark.com?subject=Forgot%20Username)')
+def add_message(message, role):
+    st.session_state.messages.append({"role": role, "content": message})
 
+def display_chat():
+    for msg in st.session_state.messages:
+        if msg['role'] == 'user':
+            st.write(f"**You:** {msg['content']}")
+        else:
+            st.write(f"**Nia:** {msg['content']}")
+
+display_chat()
+
+user_input = st.text_input("Say something:", "")
+
+if st.button('Send'):
+    if user_input:
+        add_message(user_input, 'user')
+        with st.spinner("Nia is thinking..."):
+            response = get_chatbot_response(user_input)
+            add_message(response, 'model')
+        st.experimental_rerun()  # Refresh the page to show the new messages
