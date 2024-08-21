@@ -247,7 +247,4 @@ else:
                 st.error('Username not found.')
 
     # Forgot Username
-    st.write('Forgot Username? [Contact Support](mailto:support@infomark.com?subject=Forgot%20Username)')
-
-    # Forgot Email Verification
-    st.write('If you forgot your email, please [contact support](mailto:support@infomark.com?subject=Forgot%20Email%20Verification) with your username for verification.')
+    st.write('Facing Any Issues, or Have Any Feedback To Share? [Contact Support](mailto:support@infomark.com?subject=Forgot%20Username)')
