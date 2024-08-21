@@ -10,7 +10,8 @@ def create_table():
             CREATE TABLE IF NOT EXISTS users (
                 username TEXT PRIMARY KEY,
                 email TEXT NOT NULL,
-                password TEXT NOT NULL
+                password TEXT NOT NULL,
+                profile_pic TEXT
             )
         ''')
         conn.commit()
