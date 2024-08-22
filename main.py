@@ -1,14 +1,14 @@
+# main.py
 import os
 import base64
 import streamlit as st
 import pandas as pd
+from io import BytesIO
 from data_fetch import fetch_data, search_symbols
 from plotting import plot_data
 from authentication import register_user, authenticate_user, update_user_credentials
 # At the beginning of main.py
 from initializedb import initialize_database
-
-
 
 # Set page config as the very first command
 st.set_page_config(page_title="Infomark Financial Dashboard :bar_chart:", layout="wide")
@@ -107,6 +107,14 @@ def load_image(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
+def to_excel(df):
+    """Convert DataFrame to Excel file."""
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Data')
+    processed_data = output.getvalue()
+    return processed_data
+
 # Main function to run the app
 def main():
     if st.session_state['authentication_status']:
@@ -201,6 +209,15 @@ def main():
                     # Display data table
                     if plot_type == 'Simple Table':
                         st.dataframe(data)
+
+                        # Add Export to Excel Button
+                        excel_data = to_excel(data)
+                        st.download_button(
+                            label="Export to Excel 📥",
+                            data=excel_data,
+                            file_name="data.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
 
                     # Check columns before plotting
                     if 'Date' in data.columns and 'Close' in data.columns:
