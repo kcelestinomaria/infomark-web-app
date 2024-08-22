@@ -1,0 +1,191 @@
+If you encounter the `bash: crontab: command not found` error, it means that the `cron` utility is not installed or not available in your environment. Here’s how you can address this issue:
+
+### 1. **Install `cron`**
+
+Depending on your operating system, you can install `cron` using the appropriate package manager:
+
+- **For Debian-based systems (e.g., Ubuntu):**
+
+  ```bash
+  sudo apt-get update
+  sudo apt-get install cron
+  ```
+
+- **For Red Hat-based systems (e.g., CentOS, Fedora):**
+
+  ```bash
+  sudo yum install cronie
+  ```
+
+- **For macOS:**
+
+  macOS uses `launchd` instead of `cron`, but you can still use `cron` if you prefer. Install `cron` via Homebrew:
+
+  ```bash
+  brew install cron
+  ```
+
+### 2. **Verify Installation**
+
+After installing, verify that `cron` is installed and the `crontab` command is available:
+
+```bash
+crontab -l
+```
+
+If the installation was successful, this command should list the current cron jobs or indicate that no cron jobs are currently set.
+
+### 3. **Add a Cron Job**
+
+Once `cron` is installed, you can add a new cron job:
+
+1. **Open the Crontab File**
+
+   ```bash
+   crontab -e
+   ```
+
+2. **Add the Cron Job Entry**
+
+   Insert the line to schedule your Python script. For example, to run the script daily at midnight:
+
+   ```bash
+   0 0 * * * /usr/bin/python3 /path/to/generate_summaries.py >> /path/to/logfile.log 2>&1
+   ```
+
+3. **Save and Exit**
+
+   Save the file and exit the editor. Your cron job will now be scheduled.
+
+### 4. **Check Cron Service Status**
+
+Ensure that the cron service is running. You can start and enable it using:
+
+- **For Debian-based systems:**
+
+  ```bash
+  sudo systemctl start cron
+  sudo systemctl enable cron
+  ```
+
+- **For Red Hat-based systems:**
+
+  ```bash
+  sudo systemctl start crond
+  sudo systemctl enable crond
+  ```
+
+### 5. **Alternative: Using `launchd` on macOS**
+
+If you are on macOS and prefer to use `launchd`, you can create a `.plist` file for your job:
+
+1. **Create a `.plist` File**
+
+   Create a file named `com.example.generate_summaries.plist` in `~/Library/LaunchAgents/` with the following content:
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   <plist version="1.0">
+   <dict>
+       <key>Label</key>
+       <string>com.example.generate_summaries</string>
+       <key>ProgramArguments</key>
+       <array>
+           <string>/usr/bin/python3</string>
+           <string>/path/to/generate_summaries.py</string>
+       </array>
+       <key>StartInterval</key>
+       <integer>86400</integer> <!-- Runs daily (86400 seconds) -->
+       <key>StandardOutPath</key>
+       <string>/path/to/logfile.log</string>
+       <key>StandardErrorPath</key>
+       <string>/path/to/error.log</string>
+   </dict>
+   </plist>
+   ```
+
+2. **Load the `.plist` File**
+
+   ```bash
+   launchctl load ~/Library/LaunchAgents/com.example.generate_summaries.plist
+   ```
+
+This will schedule your script to run daily and log the output and errors to the specified files.
+
+By following these steps, you should be able to set up and manage cron jobs or scheduled tasks in your environment.
+
+3. Schedule the Cron Job
+Set up a cron job to execute your script at the desired interval. For instance, to run the script daily at midnight, follow these steps:
+
+- Open the Crontab File
+
+bash: ```
+crontab -e
+```
+Add the Cron Job Entry
+
+- Add the following line to schedule your Python script:
+
+bash: ```
+0 0 * * * /usr/bin/python3 /path/to/generate_summaries.py >> /path/to/logfile.log 2>&1
+```
+This line schedules the script to run daily at midnight and logs the output and errors to logfile.log.
+
+FOR WINDOWS:
+For Windows, you can use the Task Scheduler to set up and manage scheduled tasks, such as running your Python script to generate data summaries. Here's how you can do it:
+
+### **1. Open Task Scheduler**
+
+- **Press** `Win + R` to open the Run dialog.
+- **Type** `taskschd.msc` and **press** Enter to open Task Scheduler.
+
+### **2. Create a New Task**
+
+1. **In the Task Scheduler window:**
+
+   - **Click** on "Create Basic Task" in the Actions pane on the right.
+
+2. **Name Your Task:**
+
+   - **Enter** a name and description for your task (e.g., "Generate Data Summaries").
+
+3. **Set the Trigger:**
+
+   - Choose how often you want the task to run (e.g., Daily).
+   - Set the start date and time for the task.
+
+4. **Define the Action:**
+
+   - **Select** "Start a Program" and **click** Next.
+
+5. **Configure the Program/Script:**
+
+   - **Program/script:** Enter the path to your Python executable (e.g., `C:\Python39\python.exe`).
+   - **Add arguments (optional):** Enter the path to your script (e.g., `C:\path\to\generate_summaries.py`).
+   - **Start in (optional):** Enter the directory where your script is located (e.g., `C:\path\to`).
+
+   Example:
+   - **Program/script:** `C:\Python39\python.exe`
+   - **Add arguments:** `C:\path\to\generate_summaries.py`
+
+6. **Finish and Save:**
+
+   - **Click** Next to review your settings.
+   - **Click** Finish to create the task.
+
+### **3. Verify and Manage Scheduled Tasks**
+
+- After creating the task, you can **view** and **manage** it in the Task Scheduler Library.
+- **Right-click** on your task and select **Properties** to modify its settings if needed.
+
+### **4. Check Task Execution**
+
+- **Verify** that the task runs as expected by **checking** the Task Scheduler’s History tab for the task or **looking** for any output files or logs generated by your script.
+
+### **Additional Considerations**
+
+- **Permissions:** Ensure that the user account under which the task runs has the necessary permissions to execute the script and access any required files or resources.
+- **Error Handling:** You may want to add error handling and logging to your Python script to capture any issues that occur during execution.
+
+By following these steps, you can set up a scheduled task on Windows to automate the execution of your Python script for generating data summaries.

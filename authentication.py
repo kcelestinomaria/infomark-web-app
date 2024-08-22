@@ -1,135 +1,212 @@
-<<<<<<< HEAD
-import yaml
-import streamlit as st
-import streamlit_authenticator as stauth
-from pymongo import MongoClient
-from pymongo.server_api import ServerApi
+import sqlite3
+import bcrypt
 
-# Load configuration from config.yml
-with open('config.yml') as file:
-    config = yaml.load(file, Loader=yaml.SafeLoader)
+DB_PATH = 'app_database.db'
 
-# Initialize authenticator with configuration from config.yml
-authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days'],
-    config['pre-authorized']
-)
-
-# MongoDB Atlas connection string
-uri = "mongodb+srv://celestino127:<C0mpa$$i0n127>@cluster0.5qsdpkx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-client = MongoClient(uri, server_api=ServerApi('1'))
-
-# Connect to MongoDB database
-db = client['infomark_db']
-users_collection = db['users']
-
-def login(location='main'):
-    """
-    Handle user login using the authenticator instance and update session state.
-    """
-    username, authentication_status, name = authenticator.login(location=location)
-    
-    if authentication_status:
-        # Fetch user details from MongoDB
-        user = users_collection.find_one({'username': username})
-        if user:
-            st.session_state['authentication_status'] = True
-            st.session_state['username'] = username
-            st.session_state['name'] = name
-            st.session_state['email'] = user.get('email', '')
-        else:
-            st.error("User not found.")
-            st.session_state['authentication_status'] = False
-            
-        return True
-    else:
-        return False
+def create_table():
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INT AUTOINCREMENT,
+                username TEXT PRIMARY KEY,
+                email TEXT NOT NULL,
+                password TEXT NOT NULL,
+                profile_pic TEXT
+            )
+        ''')
+        conn.commit()
 
 def register_user(username, email, password):
-    """
-    Register a new user by adding them to the config.yml file and MongoDB.
-    """
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     try:
-        if username in authenticator.credentials['usernames']:
-            return False  # Username already exists
-        else:
-            # Hash the password before storing
-            hashed_password = authenticator.hasher.hash_password(password)
-            authenticator.credentials['usernames'][username] = {
-                'name': username,
-                'email': email,
-                'password': hashed_password
-            }
-
-            # Save updated credentials to config.yml
-            with open('config.yml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
-
-            # Store user details in MongoDB
-            users_collection.insert_one({
-                'username': username,
-                'name': username,  # Placeholder; user can update later
-                'email': email,
-                'password': hashed_password  # NOTE: Password stored as hashed
-            })
-
-            return True
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', 
+                           (username, email, hashed_password))
+            conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
     except Exception as e:
-        st.error(f"An error occurred while registering the user: {e}")
+        print(f"An error occurred while registering the user: {e}")
         return False
 
-def update_user_details(username, new_name, new_email):
-    """
-    Update user details (name and email) in the config.yml file and MongoDB.
-    """
+def authenticate_user(username, password):
     try:
-        if username in authenticator.credentials['usernames']:
-            authenticator.credentials['usernames'][username]['name'] = new_name
-            authenticator.credentials['usernames'][username]['email'] = new_email
-
-            # Save updated credentials to config.yml
-            with open('config.yml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
-
-            # Update MongoDB user details
-            users_collection.update_one(
-                {'username': username},
-                {'$set': {'name': new_name, 'email': new_email}}
-            )
-            return True
-        else:
-            return False
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT password FROM users WHERE username = ?', (username,))
+            row = cursor.fetchone()
+            if row and bcrypt.checkpw(password.encode('utf-8'), row[0].encode('utf-8')):
+                return True
+            else:
+                return False
     except Exception as e:
-        st.error(f"An error occurred while updating user details: {e}")
+        print(f"An error occurred during authentication: {e}")
         return False
 
-def reset_password(username, new_password):
-    """
-    Reset the password for a user and update the config.yml file and MongoDB.
-    """
+def create_role(role_name):
+    """Create a new role."""
     try:
-        if username in authenticator.credentials['usernames']:
-            # Hash the new password before storing
-            hashed_password = authenticator.hasher.hash_password(new_password)
-            authenticator.credentials['usernames'][username]['password'] = hashed_password
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO roles (role_name) VALUES (?)', (role_name,))
+            conn.commit()
+    except sqlite3.IntegrityError:
+        print(f"Role '{role_name}' already exists.")
+    except Exception as e:
+        print(f"An error occurred while creating the role: {e}")
 
-            # Save updated credentials to config.yml
-            with open('config.yml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
+def assign_role_to_user(username, role_name):
+    """Assign a role to a user."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+            user = cursor.fetchone()
+            if user:
+                user_id = user[0]
+                cursor.execute('SELECT id FROM roles WHERE role_name = ?', (role_name,))
+                role = cursor.fetchone()
+                if role:
+                    role_id = role[0]
+                    cursor.execute('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', (user_id, role_id))
+                    conn.commit()
+                    print(f"Assigned role '{role_name}' to user '{username}'.")
+                else:
+                    print(f"Role '{role_name}' does not exist.")
+            else:
+                print(f"User '{username}' does not exist.")
+    except Exception as e:
+        print(f"An error occurred while assigning the role: {e}")
 
-            # Update MongoDB password
-            users_collection.update_one(
-                {'username': username},
-                {'$set': {'password': hashed_password}}
-            )
-            return True
-        else:
+# User Roles - Role Management
+def create_role(role_name):
+    """Create a new role."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO roles (role_name) VALUES (?)', (role_name,))
+            conn.commit()
+    except sqlite3.IntegrityError:
+        print(f"Role '{role_name}' already exists.")
+    except Exception as e:
+        print(f"An error occurred while creating the role: {e}")
+
+def assign_role_to_user(username, role_name):
+    """Assign a role to a user."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+            user = cursor.fetchone()
+            if user:
+                user_id = user[0]
+                cursor.execute('SELECT id FROM roles WHERE role_name = ?', (role_name,))
+                role = cursor.fetchone()
+                if role:
+                    role_id = role[0]
+                    cursor.execute('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', (user_id, role_id))
+                    conn.commit()
+                    print(f"Assigned role '{role_name}' to user '{username}'.")
+                else:
+                    print(f"Role '{role_name}' does not exist.")
+            else:
+                print(f"User '{username}' does not exist.")
+    except Exception as e:
+        print(f"An error occurred while assigning the role: {e}")
+
+def get_user_roles(username):
+    """Get all roles for a given user."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT r.role_name 
+                FROM roles r 
+                JOIN user_roles ur ON r.id = ur.role_id 
+                JOIN users u ON u.id = ur.user_id 
+                WHERE u.username = ?
+            ''', (username,))
+            roles = cursor.fetchall()
+            return [role[0] for role in roles]
+    except Exception as e:
+        print(f"An error occurred while retrieving user roles: {e}")
+        return []
+
+def initiate_password_reset(username):
+    """Generate a password reset token for the user."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+            user = cursor.fetchone()
+            if user:
+                user_id = user[0]
+                reset_token = str(uuid.uuid4())
+                expiration = datetime.now() + timedelta(hours=1)
+                cursor.execute('INSERT INTO password_resets (user_id, reset_token, expiration) VALUES (?, ?, ?)',
+                               (user_id, reset_token, expiration))
+                conn.commit()
+                return reset_token
+            return None
+    except Exception as e:
+        print(f"An error occurred while initiating password reset: {e}")
+        return None
+
+def reset_password(reset_token, new_password):
+    """Reset the user's password using the reset token."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT user_id FROM password_resets WHERE reset_token = ? AND expiration > ?', 
+                           (reset_token, datetime.now()))
+            reset = cursor.fetchone()
+            if reset:
+                user_id = reset[0]
+                hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                cursor.execute('UPDATE users SET password = ? WHERE id = ?', (hashed_password, user_id))
+                cursor.execute('DELETE FROM password_resets WHERE reset_token = ?', (reset_token,))
+                conn.commit()
+                return True
             return False
     except Exception as e:
-        st.error(f"An error occurred while resetting the password: {e}")
+        print(f"An error occurred while resetting the password: {e}")
+        return False
+
+
+def log_user_action(user_id, action):
+    """Log user actions for auditing purposes."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO logs (user_id, action) VALUES (?, ?)', (user_id, action))
+            conn.commit()
+    except Exception as e:
+        print(f"An error occurred while logging user action: {e}")
+
+def update_user_credentials(current_username, new_username=None, new_password=None, profile_pic_path=None):
+    try:
+        conn = sqlite3.connect('app_database.db')
+        cursor = conn.cursor()
+
+        if new_username and new_password and profile_pic_path:
+            cursor.execute("UPDATE users SET username=?, password=?, profile_pic=? WHERE username=?", (new_username, new_password, profile_pic_path, current_username))
+        elif new_username and new_password:
+            cursor.execute("UPDATE users SET username=?, password=? WHERE username=?", (new_username, new_password, current_username))
+        elif new_username:
+            cursor.execute("UPDATE users SET username=? WHERE username=?", (new_username, current_username))
+        elif new_password:
+            cursor.execute("UPDATE users SET password=? WHERE username=?", (new_password, current_username))
+        elif profile_pic_path:
+            cursor.execute("UPDATE users SET profile_pic=? WHERE username=?", (profile_pic_path, current_username))
+        
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error updating credentials: {e}")
         return False
 =======
 >>>>>>> 9451902 (Default)

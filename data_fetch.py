@@ -1,38 +1,9 @@
 import pandas as pd
-from pymongo import MongoClient
-from pymongo.server_api import ServerApi
+from openbb import obb
+import streamlit as st
+import sqlite3
 
-# MongoDB Atlas connection string
-uri = "mongodb+srv://celestino127:<C0mpa$$i0n127>@cluster0.5qsdpkx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-client = MongoClient(uri, server_api=ServerApi('1'))
-
-# Connect to MongoDB database
-db = client['infomark_db']
-data_collection = db['data']
-
-def fetch_data(data_type, symbol=None, indicator=None, currency_pair=None, start_date=None, end_date=None, provider='Standard'):
-    """Fetches data based on type and filters from MongoDB"""
-    query = {"data_type": data_type}
-    if symbol:
-        query["symbol"] = symbol
-    if indicator:
-        query["indicator"] = indicator
-    if currency_pair:
-        query["currency_pair"] = currency_pair
-    if start_date and end_date:
-        query["date"] = {"$gte": start_date, "$lte": end_date}
-    if provider != 'Standard':
-        query["provider"] = provider
-
-    cursor = data_collection.find(query)
-    data = pd.DataFrame(list(cursor))
-
-    # Clean up the DataFrame, if necessary
-    if not data.empty:
-        data.drop('_id', axis=1, inplace=True)
-
-<<<<<<< HEAD
-def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_date=None, end_date=None, provider=""):
+def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_date=None, end_date=None, provider="", user_id=None):
     try:
         if provider == "Standard":
             if data_type == 'Equity':  # Stocks
@@ -51,20 +22,59 @@ def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_d
             # Implement custom provider data fetching
             data = pd.DataFrame()  # Placeholder
         else:
-            data = pd.DataFrame()
-        
-        return data
+            # Handle provider-specific logic
+            if data_type == 'Equity':
+                if start_date and end_date:
+                    data = obb.equity.price.historical(symbol=symbol, provider=provider, start_date=start_date, end_date=end_date).to_df()
+                else:
+                    data = obb.equity.price.historical(symbol=symbol, provider=provider).to_df()
+            elif data_type == 'Crypto':
+                if start_date and end_date:
+                    data = obb.crypto.price.historical(symbol=symbol, provider=provider, start_date=start_date, end_date=end_date).to_df()
+                else:
+                    data = obb.crypto.price.historical(symbol=symbol, provider=provider).to_df()
+            elif data_type == 'Commodity':
+                if start_date and end_date:
+                    data = obb.commodity.price.historical(symbol=symbol, provider=provider, start_date=start_date, end_date=end_date).to_df()
+                else:
+                    data = obb.commodity.price.historical(symbol=symbol, provider=provider).to_df()
+            elif data_type == 'US Economy Data':
+                data = obb.economy.fred_search(["WALCL", "WLRRAL", "WDTGAL", "SP500"], provider=provider).to_df()
+            elif data_type == 'currency':
+                if start_date and end_date:
+                    data = obb.currency.price.historical(currency_pair=currency_pair, provider=provider, start_date=start_date, end_date=end_date).to_df()
+                else:
+                    data = obb.currency.price.historical(currency_pair=currency_pair, provider=provider).to_df()
+            else:
+                log_data_request(user_id=user_id, data_type=data_type, symbol=symbol, indicator=indicator, currency_pair=currency_pair, start_date=start_date, end_date=end_date, provider=provider)
+                return pd.DataFrame()
     except Exception as e:
         st.error(f"An error occurred while fetching data: {e}")
         return pd.DataFrame()
 
-def search_symbols(search_term):
+def search_symbols(query, user_id=None):
     try:
-        results = obb.search(search_term)
-        return results
+        # Example for equity symbols, you might need to adjust this based on the provider
+        search_results = obb.equity.search(query=query).to_df()
+        log_search_history(user_id=user_id, query=query)
+        return search_results[['symbol', 'name']]
     except Exception as e:
-        st.error(f"An error occurred while searching for symbols: {e}")
+        st.error(f'Error searching for symbols: {e}')
         return pd.DataFrame()
-=======
-    return data
->>>>>>> 9451902 (Default)
+
+def log_search_history(user_id, query):
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO SearchHistory (user_id, query) VALUES (?, ?)', (user_id, query))
+    conn.commit()
+    conn.close()
+
+def log_data_request(user_id, data_type, symbol, indicator, currency_pair, start_date, end_date, provider):
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+    INSERT INTO DataRequests (user_id, data_type, symbol, indicator, currency_pair, start_date, end_date, provider)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+    (user_id, data_type, symbol, indicator, currency_pair, start_date, end_date, provider))
+    conn.commit()
+    conn.close()
