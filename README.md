@@ -20,16 +20,16 @@ It has been developed for the Strathmore University DBIT IS Project 1, under stu
 
 ### 2. Financial Data Analysis
 
-![Infomark Pictures](images/InfomarkShowEquityData.jpeg)
+![Infomark Pictures](images/InfomarkShowEquityData.png)
 
 - **Search & Explore**: Search for ticker symbols and explore various types of financial data.
 
-![Infomark Pictures](images/PickDateRange.jpeg)
+![Infomark Pictures](images/PickDateRange.png)
 
 - **Data Visualization**: Display data through line graphs and tables.
 - **Provider Selection**: Access data from multiple financial data providers through an Openbb interface integration
 
-![Infomark Pictures](images/ExportToExcel.jpeg)
+![Infomark Pictures](/images/ExportToExcel.jpeg)
 - **Export To Excel**: Export Real-Time Data to Microsoft Excel
 
 ## Technical Specifications
