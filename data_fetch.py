@@ -2,8 +2,9 @@
 import pandas as pd
 from openbb import obb
 import streamlit as st
+import sqlite3
 
-def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_date=None, end_date=None, provider=""):
+def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_date=None, end_date=None, provider="", user_id=None):
     try:
         if provider == "Standard":
             if data_type == 'Equity': # Stocks
@@ -56,17 +57,36 @@ def fetch_data(data_type, symbol="", indicator=None, currency_pair=None, start_d
                 else:
                     data = obb.currency.price.historical(currency_pair=currency_pair, provider=provider).to_df()
             else:
+                log_data_request(user_id=user_id, data_type=data_type, symbol=symbol, indicator=indicator, currency_pair=currency_pair, start_date=start_date, end_date=end_date, provider=provider)
                 return pd.DataFrame()
     except Exception as e:
         st.error(f'Error fetching data: {e}')
         return pd.DataFrame()
     return data
 
-def search_symbols(query):
+def search_symbols(query, user_id=None):
     try:
         # Example for equity symbols, you might need to adjust this based on the provider
         search_results = obb.equity.search(query=query).to_df()
+        log_search_history(user_id=user_id, query=query)
         return search_results[['symbol', 'name']]
     except Exception as e:
         st.error(f'Error searching for symbols: {e}')
         return pd.DataFrame()
+
+def log_search_history(user_id, query):
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO SearchHistory (user_id, query) VALUES (?, ?)', (user_id, query))
+    conn.commit()
+    conn.close()
+
+def log_data_request(user_id, data_type, symbol, indicator, currency_pair, start_date, end_date, provider):
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+    INSERT INTO DataRequests (user_id, data_type, symbol, indicator, currency_pair, start_date, end_date, provider)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+    (user_id, data_type, symbol, indicator, currency_pair, start_date, end_date, provider))
+    conn.commit()
+    conn.close()

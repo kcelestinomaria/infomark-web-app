@@ -1,0 +1,24 @@
+1.Tables:
+
+Users: Store user information like username, email, password, etc.
+ProfilePictures: Store user profile pictures, linked to the Users table.
+SearchHistory: Store users' search history for ticker symbols, linked to the Users table.
+DataRequests: Store details of data fetched by users, such as the type of data (Equity, Crypto, etc.), symbol, start date, end date, provider, etc.
+Favorites: Store favorite symbols for each user, linked to the Users table.
+
+
+2.Relationships:
+
+Users-ProfilePictures: One-to-one (1:1) relationship.
+Users-SearchHistory: One-to-many (1
+) relationship.
+Users-DataRequests: One-to-many (1
+) relationship.
+Users-Favorites: One-to-many (1
+) relationship.
+
+3. Cardinality:
+
+One-to-One (1:1): Each user has one profile picture.
+One-to-Many (1
+): Each user can have multiple search history records, data requests, and favorite symbols.

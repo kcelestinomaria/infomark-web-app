@@ -8,6 +8,7 @@ def create_table():
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
+                user_id INT AUTOINCREMENT,
                 username TEXT PRIMARY KEY,
                 email TEXT NOT NULL,
                 password TEXT NOT NULL,

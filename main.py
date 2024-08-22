@@ -5,9 +5,16 @@ import pandas as pd
 from data_fetch import fetch_data, search_symbols
 from plotting import plot_data
 from authentication import register_user, authenticate_user, update_user_credentials
+# At the beginning of main.py
+from initializedb import initialize_database
+
+
 
 # Set page config as the very first command
 st.set_page_config(page_title="Infomark Financial Dashboard :bar_chart:", layout="wide")
+
+# Initialize the database
+initialize_database()
 
 # Apply custom CSS for dark theme
 st.markdown("""
